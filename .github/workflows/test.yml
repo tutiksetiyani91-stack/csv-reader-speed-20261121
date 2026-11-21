@@ -1,0 +1,27 @@
+name: CSV regression tests
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: ['22.18.0', '24']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - name: Check tracked file modes
+        run: |
+          git ls-files -s
+          if git ls-files -s | grep -Ev '^100644 '; then
+            echo 'Unexpected tracked file mode'
+            exit 1
+          fi
+      - name: Test parser and actual main.ts entrypoint twice
+        run: node test.mjs
